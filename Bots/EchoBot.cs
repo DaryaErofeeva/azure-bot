@@ -14,7 +14,7 @@ namespace Microsoft.BotBuilderSamples.Bots
     {
         private static readonly string subscriptionKey = "a716a915e43a4d8e9f12f321927b4ef3";
         private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com/";
-        private static readonly string route = "/translate?api-version=3.0&to=de&to=it&to=ja&to=th";
+        private static readonly string route = "/translate?api-version=3.0&to=fr";
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
@@ -26,7 +26,7 @@ namespace Microsoft.BotBuilderSamples.Bots
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded,
             ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            var welcomeText = "Hello and welcome!";
+            var welcomeText = "Bonjour et bienvenue!";
             foreach (var member in membersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
