@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,15 +13,13 @@ namespace Microsoft.BotBuilderSamples.Bots
 {
     public class EchoBot : ActivityHandler
     {
-        private static readonly string subscriptionKey = "a716a915e43a4d8e9f12f321927b4ef3";
-        private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com/";
-        private static readonly string route = "/translate?api-version=3.0&to=fr";
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
         {
-            var replyText = await TranslateText(turnContext.Activity.Text);
-            await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
+            var translatedText = await TranslateText(turnContext.Activity.Text);
+            var reply = await GetResultActivity(translatedText);
+            await turnContext.SendActivityAsync(reply, cancellationToken);
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded,
@@ -39,7 +38,29 @@ namespace Microsoft.BotBuilderSamples.Bots
 
         private async Task<string> TranslateText(string textToTranslate)
         {
-            return await Translator.TranslateTextRequest(subscriptionKey, endpoint, route, textToTranslate);
+            return await Translator.TranslateTextRequest(textToTranslate);
+        }
+
+        private async Task<Activity> GetResultActivity(string translatedText)
+        {
+            var resultAudio = await Speech.Speech.SynthesizeAudioAsync(translatedText);
+            if (resultAudio != null)
+            {
+                MessageFactory.Attachment(GetLocalFileAttachment(resultAudio, translatedText));
+            }
+
+            return MessageFactory.Text(translatedText, translatedText);
+        }
+
+        private Attachment GetLocalFileAttachment(Object audio, string text)
+        {
+            Attachment attachment = new Attachment
+            {
+                ContentType = "audio/mpeg",
+                Content = audio,
+                Name = text
+            };
+            return attachment;
         }
     }
 }

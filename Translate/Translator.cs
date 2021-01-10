@@ -9,8 +9,10 @@ namespace Microsoft.BotBuilderSamples.Translate
 {
     public class Translator
     {
-        static public async Task<string> TranslateTextRequest(string subscriptionKey, string endpoint, string route,
-            string inputText)
+        private static readonly string subscriptionKey = "56226ff8908545a2a80a180df69c6f74";
+        private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com/";
+        private static readonly string route = "/translate?api-version=3.0&to=fr";
+        static public async Task<string> TranslateTextRequest(string inputText)
         {
             object[] body = new object[] {new {Text = inputText}};
             var requestBody = JsonConvert.SerializeObject(body);
