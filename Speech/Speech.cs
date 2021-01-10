@@ -14,6 +14,7 @@ namespace Microsoft.BotBuilderSamples.Speech
             // Replace with your own subscription key and service region (e.g., "westus").
             // The default language is "en-us".
             var config = SpeechConfig.FromSubscription("14a1f16db7d349128fb721d73e913ca6", "eastus");
+            config.SpeechSynthesisLanguage = "fr-FR";
 
             // Sets the synthesis output format.
             // The full list of supported format can be found here:
