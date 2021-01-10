@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Microsoft.BotBuilderSamples.Translate;
+using Microsoft.CognitiveServices.Speech;
 
 namespace Microsoft.BotBuilderSamples.Bots
 {
     public class EchoBot : ActivityHandler
     {
-
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
         {
@@ -41,15 +41,16 @@ namespace Microsoft.BotBuilderSamples.Bots
             return await Translator.TranslateTextRequest(textToTranslate);
         }
 
-        private async Task<Activity> GetResultActivity(string translatedText)
+        private async Task<IMessageActivity> GetResultActivity(string translatedText)
         {
-            var resultAudio = await Speech.Speech.SynthesizeAudioAsync(translatedText);
-            if (resultAudio != null)
+            var speechResult = await Speech.Speech.SynthesizeAudioAsync(translatedText);
+            if (speechResult.Reason == ResultReason.SynthesizingAudioCompleted)
             {
-                MessageFactory.Attachment(GetLocalFileAttachment(resultAudio, translatedText));
+                return MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData, translatedText));
             }
 
-            return MessageFactory.Text(translatedText, translatedText);
+            var reply = String.Format("{0}\nSpeech fail reason: {1}", translatedText, speechResult.Reason);
+            return MessageFactory.Text(reply, reply);
         }
 
         private Attachment GetLocalFileAttachment(Object audio, string text)

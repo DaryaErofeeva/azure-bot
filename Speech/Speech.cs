@@ -8,7 +8,7 @@ namespace Microsoft.BotBuilderSamples.Speech
     {
         internal static readonly string FileName = "outputaudio.mp3";
 
-        internal static async Task<byte[]> SynthesizeAudioAsync(string translatedText)
+        internal static async Task<SpeechSynthesisResult> SynthesizeAudioAsync(string translatedText)
         {
             // Creates an instance of a speech config with specified subscription key and service region.
             // Replace with your own subscription key and service region (e.g., "westus").
@@ -26,15 +26,8 @@ namespace Microsoft.BotBuilderSamples.Speech
             {
                 using (var synthesizer = new SpeechSynthesizer(config, fileOutput))
                 {
-                    using (var result = await synthesizer.SpeakTextAsync(translatedText))
-                    {
-                        if (result.Reason == ResultReason.SynthesizingAudioCompleted)
-                        {
-                            return result.AudioData;
-                        }
-
-                        return null;
-                    }
+                    var speechResult = await synthesizer.SpeakTextAsync(translatedText);
+                    return speechResult;
                 }
             }
         }
