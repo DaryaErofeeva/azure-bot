@@ -14,23 +14,36 @@ namespace Microsoft.BotBuilderSamples.Bots
 {
     public class EchoBot : ActivityHandler
     {
+        private static readonly string ContentType = "audio/mpeg";
+        private static readonly string WelcomeMessage = "Bonjour et bienvenue!";
+
+        private static readonly string InstructionMessage =
+            "Commençons! Entrez la phrase dans n’importe quelle langue et je vais la traduire pour vous en Français.";
+
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
         {
-            var translatedText = await TranslateText(turnContext.Activity.Text);
-            var reply = await GetResultActivity(translatedText);
-            await turnContext.SendActivityAsync(reply, cancellationToken);
+            if (turnContext.Activity.Text.Equals("/start"))
+            {
+                await turnContext.SendActivityAsync(
+                    MessageFactory.Text(InstructionMessage, InstructionMessage), cancellationToken);
+            }
+            else
+            {
+                var translatedText = await TranslateText(turnContext.Activity.Text);
+                var reply = await GetResultActivity(translatedText);
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded,
             ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            var welcomeText = "Bonjour et bienvenue!";
             foreach (var member in membersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    await turnContext.SendActivityAsync(MessageFactory.Text(welcomeText, welcomeText),
+                    await turnContext.SendActivityAsync(MessageFactory.Text(WelcomeMessage, WelcomeMessage),
                         cancellationToken);
                 }
             }
@@ -57,7 +70,7 @@ namespace Microsoft.BotBuilderSamples.Bots
         {
             Attachment attachment = new Attachment
             {
-                ContentType = "audio/mpeg",
+                ContentType = ContentType,
                 Content = audio,
                 Name = text
             };
