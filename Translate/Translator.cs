@@ -3,38 +3,45 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.BotBuilderSamples.KeyVault;
 using Newtonsoft.Json;
 
 namespace Microsoft.BotBuilderSamples.Translate
 {
-    public class Translator
+    public static class Translator
     {
-        private static readonly string subscriptionKey = "56226ff8908545a2a80a180df69c6f74";
-        private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com/";
-        private static readonly string route = "/translate?api-version=3.0&to=fr";
+        private const string SubscriptionKeySecretName = "translator-endpoint";
+        private const string EndpointSecretName = "translator-key";
+        private const string Route = "/translate?api-version=3.0&to=fr";
+        private const string SubscriptionKeyHeader = "Ocp-Apim-Subscription-Key";
+        private const string MediaType = "application/json";
 
-        static public async Task<string> TranslateTextRequest(string inputText)
+        public static async Task<string> TranslateTextRequest(SecretProvider secretProvider, string inputText)
         {
-            object[] body = new object[] {new {Text = inputText}};
+            var subscriptionKey = secretProvider.GetSecret(SubscriptionKeySecretName);
+            var endpoint = secretProvider.GetSecret(EndpointSecretName);
+
+            object[] body = {new {Text = inputText}};
             var requestBody = JsonConvert.SerializeObject(body);
 
-            using (var client = new HttpClient())
-            using (var request = new HttpRequestMessage())
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage
             {
-                // Build the request.
-                request.Method = HttpMethod.Post;
-                request.RequestUri = new Uri(endpoint + route);
-                request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-                request.Headers.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+                Method = HttpMethod.Post,
+                RequestUri = new Uri(endpoint + Route),
+                Content = new StringContent(requestBody, Encoding.UTF8, MediaType)
+            };
 
-                // Send the request and get response.
-                HttpResponseMessage response = await client.SendAsync(request).ConfigureAwait(false);
-                // Read response as a string.
-                string result = await response.Content.ReadAsStringAsync();
-                Translation translation = JsonConvert.DeserializeObject<TranslationResult[]>(result).First()
-                    .Translations.First();
-                return translation.Text;
-            }
+            // Build the request.
+            request.Headers.Add(SubscriptionKeyHeader, subscriptionKey);
+
+            // Send the request and get response.
+            var response = await client.SendAsync(request).ConfigureAwait(false);
+
+            // Read response as a string.
+            var result = await response.Content.ReadAsStringAsync();
+            var translation = JsonConvert.DeserializeObject<TranslationResult[]>(result).First().Translations.First();
+            return translation.Text;
         }
     }
 }

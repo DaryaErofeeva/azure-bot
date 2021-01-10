@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
+using Microsoft.BotBuilderSamples.KeyVault;
 using Microsoft.BotBuilderSamples.Translate;
 using Microsoft.CognitiveServices.Speech;
 
@@ -14,13 +15,15 @@ namespace Microsoft.BotBuilderSamples.Bots
 {
     public class EchoBot : ActivityHandler
     {
-        private static readonly string ContentType = "audio/mpeg";
-        private static readonly string WelcomeMessage = "Bonjour et bienvenue!";
-        private static readonly string StartCommand = "/start";
-        private static readonly string AudioNamePrefix = "Au message:";
+        private const string ContentType = "audio/mpeg";
+        private const string WelcomeMessage = "Bonjour et bienvenue!";
+        private const string StartCommand = "/start";
+        private const string AudioNamePrefix = "Au message:";
 
-        private static readonly string InstructionMessage =
-            "Commençons! Entrez la phrase dans n’importe quelle langue et je vais la traduire pour vous en Français.";
+        private const string InstructionMessage =
+            "Commençons!\n Entrez la phrase dans n’importe quelle langue et je vais la traduire pour vous en Français.";
+
+        private SecretProvider _secretProvider;
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
@@ -40,6 +43,11 @@ namespace Microsoft.BotBuilderSamples.Bots
             }
         }
 
+        private SecretProvider GetSecretProvider()
+        {
+            return _secretProvider ??= new SecretProvider();
+        }
+
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded,
             ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
@@ -55,7 +63,7 @@ namespace Microsoft.BotBuilderSamples.Bots
 
         private async Task<string> TranslateText(string textToTranslate)
         {
-            return await Translator.TranslateTextRequest(textToTranslate);
+            return await Translator.TranslateTextRequest(GetSecretProvider(), textToTranslate);
         }
 
         private async Task<List<IMessageActivity>> GetResultActivities(string translatedText)
@@ -63,7 +71,7 @@ namespace Microsoft.BotBuilderSamples.Bots
             var messagesList = new List<IMessageActivity>();
             messagesList.Add(MessageFactory.Text(translatedText, translatedText));
 
-            var speechResult = await Speech.Speech.SynthesizeAudioAsync(translatedText);
+            var speechResult = await Speech.Speech.SynthesizeAudioAsync(GetSecretProvider(), translatedText);
             if (speechResult.Reason == ResultReason.SynthesizingAudioCompleted)
             {
                 var name = translatedText;
