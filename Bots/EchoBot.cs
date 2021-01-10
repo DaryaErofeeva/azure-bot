@@ -16,6 +16,8 @@ namespace Microsoft.BotBuilderSamples.Bots
     {
         private static readonly string ContentType = "audio/mpeg";
         private static readonly string WelcomeMessage = "Bonjour et bienvenue!";
+        private static readonly string StartCommand = "/start";
+        private static readonly string AudioNamePrefix = "Au message:";
 
         private static readonly string InstructionMessage =
             "Commençons! Entrez la phrase dans n’importe quelle langue et je vais la traduire pour vous en Français.";
@@ -23,7 +25,7 @@ namespace Microsoft.BotBuilderSamples.Bots
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
         {
-            if (turnContext.Activity.Text.Equals("/start"))
+            if (turnContext.Activity.Text.Equals(StartCommand))
             {
                 await turnContext.SendActivityAsync(
                     MessageFactory.Text(InstructionMessage, InstructionMessage), cancellationToken);
@@ -67,7 +69,7 @@ namespace Microsoft.BotBuilderSamples.Bots
                 var name = translatedText;
                 if (translatedText.Length > 7)
                 {
-                    name = String.Format("{0}...", translatedText.Substring(0, 7));
+                    name = $"{translatedText.Substring(0, 7)}...";
                 }
 
                 messagesList.Add(MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData, name)));
@@ -82,7 +84,7 @@ namespace Microsoft.BotBuilderSamples.Bots
             {
                 ContentType = ContentType,
                 Content = audio,
-                Name = name
+                Name = $"{AudioNamePrefix} {name}"
             };
             return attachment;
         }
