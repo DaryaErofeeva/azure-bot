@@ -31,8 +31,11 @@ namespace Microsoft.BotBuilderSamples.Bots
             else
             {
                 var translatedText = await TranslateText(turnContext.Activity.Text);
-                var reply = await GetResultActivity(translatedText);
-                await turnContext.SendActivityAsync(reply, cancellationToken);
+                var reply = await GetResultActivities(translatedText);
+                foreach (var activity in await GetResultActivities(translatedText))
+                {
+                    await turnContext.SendActivityAsync(activity, cancellationToken);
+                }
             }
         }
 
@@ -54,25 +57,26 @@ namespace Microsoft.BotBuilderSamples.Bots
             return await Translator.TranslateTextRequest(textToTranslate);
         }
 
-        private async Task<IMessageActivity> GetResultActivity(string translatedText)
+        private async Task<List<IMessageActivity>> GetResultActivities(string translatedText)
         {
+            var messagesList = new List<IMessageActivity>();
+            messagesList.Add(MessageFactory.Text(translatedText, translatedText));
+            
             var speechResult = await Speech.Speech.SynthesizeAudioAsync(translatedText);
             if (speechResult.Reason == ResultReason.SynthesizingAudioCompleted)
             {
-                return MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData, translatedText));
+                messagesList.Add(MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData)));
             }
 
-            var reply = String.Format("{0}\nSpeech fail reason: {1}", translatedText, speechResult.Reason);
-            return MessageFactory.Text(reply, reply);
+            return messagesList;
         }
 
-        private Attachment GetLocalFileAttachment(Object audio, string text)
+        private Attachment GetLocalFileAttachment(Object audio)
         {
             Attachment attachment = new Attachment
             {
                 ContentType = ContentType,
-                Content = audio,
-                Name = text
+                Content = audio
             };
             return attachment;
         }
