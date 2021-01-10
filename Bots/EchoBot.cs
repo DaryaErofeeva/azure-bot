@@ -31,7 +31,6 @@ namespace Microsoft.BotBuilderSamples.Bots
             else
             {
                 var translatedText = await TranslateText(turnContext.Activity.Text);
-                var reply = await GetResultActivities(translatedText);
                 foreach (var activity in await GetResultActivities(translatedText))
                 {
                     await turnContext.SendActivityAsync(activity, cancellationToken);
@@ -61,22 +60,29 @@ namespace Microsoft.BotBuilderSamples.Bots
         {
             var messagesList = new List<IMessageActivity>();
             messagesList.Add(MessageFactory.Text(translatedText, translatedText));
-            
+
             var speechResult = await Speech.Speech.SynthesizeAudioAsync(translatedText);
             if (speechResult.Reason == ResultReason.SynthesizingAudioCompleted)
             {
-                messagesList.Add(MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData)));
+                var name = translatedText;
+                if (translatedText.Length > 7)
+                {
+                    name = String.Format("{0}...", translatedText.Substring(0, 7));
+                }
+
+                messagesList.Add(MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData, name)));
             }
 
             return messagesList;
         }
 
-        private Attachment GetLocalFileAttachment(Object audio)
+        private Attachment GetLocalFileAttachment(Object audio, String name)
         {
             Attachment attachment = new Attachment
             {
                 ContentType = ContentType,
-                Content = audio
+                Content = audio,
+                Name = name
             };
             return attachment;
         }
