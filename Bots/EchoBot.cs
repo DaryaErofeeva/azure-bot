@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
-using Microsoft.BotBuilderSamples.KeyVault;
 using Microsoft.BotBuilderSamples.Translate;
 using Microsoft.CognitiveServices.Speech;
 
@@ -22,8 +21,6 @@ namespace Microsoft.BotBuilderSamples.Bots
 
         private const string InstructionMessage =
             "Commençons!\n Entrez la phrase dans n’importe quelle langue et je vais la traduire pour vous en Français.";
-
-        private SecretProvider _secretProvider;
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
             CancellationToken cancellationToken)
@@ -50,11 +47,6 @@ namespace Microsoft.BotBuilderSamples.Bots
             }
         }
 
-        private SecretProvider GetSecretProvider()
-        {
-            return _secretProvider ??= new SecretProvider();
-        }
-
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded,
             ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
@@ -68,34 +60,32 @@ namespace Microsoft.BotBuilderSamples.Bots
             }
         }
 
-        private async Task<string> TranslateText(string textToTranslate)
+        private static async Task<string> TranslateText(string textToTranslate)
         {
-            return await Translator.TranslateTextRequest(GetSecretProvider(), textToTranslate);
+            return await Translator.TranslateTextRequest(textToTranslate);
         }
 
-        private async Task<List<IMessageActivity>> GetResultActivities(string translatedText)
+        private static async Task<List<IMessageActivity>> GetResultActivities(string translatedText)
         {
             var messagesList = new List<IMessageActivity>();
             messagesList.Add(MessageFactory.Text(translatedText, translatedText));
 
-            var speechResult = await Speech.Speech.SynthesizeAudioAsync(GetSecretProvider(), translatedText);
-            if (speechResult.Reason == ResultReason.SynthesizingAudioCompleted)
+            var speechResult = await Speech.Speech.SynthesizeAudioAsync(translatedText);
+            if (speechResult.Reason != ResultReason.SynthesizingAudioCompleted) return messagesList;
+            var name = translatedText;
+            if (translatedText.Length > 7)
             {
-                var name = translatedText;
-                if (translatedText.Length > 7)
-                {
-                    name = $"{translatedText.Substring(0, 7)}...";
-                }
-
-                messagesList.Add(MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData, name)));
+                name = $"{translatedText.Substring(0, 7)}...";
             }
+
+            messagesList.Add(MessageFactory.Attachment(GetLocalFileAttachment(speechResult.AudioData, name)));
 
             return messagesList;
         }
 
-        private Attachment GetLocalFileAttachment(Object audio, String name)
+        private static Attachment GetLocalFileAttachment(Object audio, String name)
         {
-            Attachment attachment = new Attachment
+            var attachment = new Attachment
             {
                 ContentType = ContentType,
                 Content = audio,

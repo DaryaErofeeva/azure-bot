@@ -4,14 +4,14 @@ using Azure.Security.KeyVault.Secrets;
 
 namespace Microsoft.BotBuilderSamples.KeyVault
 {
-    public class SecretProvider
+    public static class SecretProvider
     {
         private const string Endpoint = "https://speechbot-keystorage.vault.azure.net/";
-        private readonly SecretClient _client = new SecretClient(new Uri(Endpoint), new DefaultAzureCredential());
+        private static readonly SecretClient Client = new SecretClient(new Uri(Endpoint), new DefaultAzureCredential());
 
-        internal string GetSecret(string secretName)
+        internal static string GetSecret(string secretName)
         {
-            return _client.GetSecret(secretName).Value.Value;
+            return Client.GetSecret(secretName).Value.Value;
         }
     }
 }

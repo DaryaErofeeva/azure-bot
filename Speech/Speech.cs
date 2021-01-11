@@ -12,13 +12,12 @@ namespace Microsoft.BotBuilderSamples.Speech
         private const string FileName = "outputaudio.mp3";
         private const string Language = "fr-FR";
 
-        internal static async Task<SpeechSynthesisResult> SynthesizeAudioAsync(SecretProvider secretProvider,
-            string translatedText)
+        private static readonly string SubscriptionKey = SecretProvider.GetSecret(SubscriptionKeySecretName);
+        private static readonly string Region = SecretProvider.GetSecret(RegionSecretName);
+
+        internal static async Task<SpeechSynthesisResult> SynthesizeAudioAsync(string translatedText)
         {
-            var subscriptionKey = secretProvider.GetSecret(SubscriptionKeySecretName);
-            var region = secretProvider.GetSecret(RegionSecretName);
-            
-            var config = SpeechConfig.FromSubscription(subscriptionKey, region);
+            var config = SpeechConfig.FromSubscription(SubscriptionKey, Region);
             config.SpeechSynthesisLanguage = Language;
             config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3);
 
