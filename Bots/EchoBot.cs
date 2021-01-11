@@ -32,17 +32,10 @@ namespace Microsoft.BotBuilderSamples.Bots
             }
             else
             {
-                try
+                var translatedText = await TranslateText(turnContext.Activity.Text);
+                foreach (var activity in await GetResultActivities(translatedText))
                 {
-                    var translatedText = await TranslateText(turnContext.Activity.Text);
-                    foreach (var activity in await GetResultActivities(translatedText))
-                    {
-                        await turnContext.SendActivityAsync(activity, cancellationToken);
-                    }
-                }
-                catch (Exception e)
-                {
-                    await turnContext.SendActivityAsync(MessageFactory.Text(e.StackTrace, e.Message), cancellationToken);
+                    await turnContext.SendActivityAsync(activity, cancellationToken);
                 }
             }
         }
