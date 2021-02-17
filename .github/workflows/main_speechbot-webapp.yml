@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -31,5 +32,5 @@ jobs:
       with:
         app-name: 'speechbot-webapp'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_bfc7b9da657e4e3aa23aa421a522e132 }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_b2d2d010f21541f6b2c509b9eaa23bee }}
         package: ${{env.DOTNET_ROOT}}/myapp 
